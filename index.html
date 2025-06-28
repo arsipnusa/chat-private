@@ -6,11 +6,15 @@
   <title>Secret Telegram Chat</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+  
     :root {
       --my-bubble: #5563de;
       --their-bubble: #e0e0e0;
     }
+  
     body {
       margin: 0;
       font-family: 'Inter', sans-serif;
@@ -23,24 +27,69 @@
       overflow-x: hidden;
       color: #333;
     }
-    .darkmode { background: linear-gradient(135deg, #2c3e50, #1c1c1c); color: #f0f0f0; }
-    .login, .chatroom {
+  
+    .darkmode {
+      background: linear-gradient(135deg, #2c3e50, #1c1c1c);
+      color: #f0f0f0;
+    }
+  
+    .login,
+    .chatroom {
       background: white;
       border-radius: 15px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
       width: 100%;
       max-width: 400px;
       padding: 25px;
       transition: background 0.3s ease, color 0.3s ease;
       position: relative;
     }
-    .darkmode .login, .darkmode .chatroom { background: #1e1e1e; color: #f0f0f0; }
-    .chatroom { display: none; flex-direction: column; height: 80vh; }
-    h3 { margin-top: 0; color: #5563de; text-align: center; font-weight: 600; }
-    .darkmode h3 { color: #f0f0f0; }
-    #clock { text-align: center; font-size: 13px; margin-top: -8px; margin-bottom: 10px; }
-    .pulse { animation: pulseRed 1s infinite alternate; }
-    @keyframes pulseRed { 0% { color: red; } 100% { color: darkred; transform: scale(1.2); } }
+  
+    .darkmode .login,
+    .darkmode .chatroom {
+      background: #1e1e1e;
+      color: #f0f0f0;
+    }
+  
+    .chatroom {
+      display: none;
+      flex-direction: column;
+      height: 80vh;
+    }
+  
+    h3 {
+      margin-top: 0;
+      color: #5563de;
+      text-align: center;
+      font-weight: 600;
+    }
+  
+    .darkmode h3 {
+      color: #f0f0f0;
+    }
+  
+    #clock {
+      text-align: center;
+      font-size: 13px;
+      margin-top: -8px;
+      margin-bottom: 10px;
+    }
+  
+    .pulse {
+      animation: pulseRed 1s infinite alternate;
+    }
+  
+    @keyframes pulseRed {
+      0% {
+        color: red;
+      }
+  
+      100% {
+        color: darkred;
+        transform: scale(1.2);
+      }
+    }
+  
     .messages {
       flex: 1;
       overflow-y: auto;
@@ -52,7 +101,11 @@
       flex-direction: column;
       scroll-behavior: smooth;
     }
-    .darkmode .messages { background: #2a2a2a; }
+  
+    .darkmode .messages {
+      background: #2a2a2a;
+    }
+  
     .message {
       max-width: 75%;
       margin: 6px 0;
@@ -64,23 +117,42 @@
       animation: fadein 0.5s forwards;
       transition: transform 0.3s ease, opacity 0.3s ease;
     }
-    @keyframes fadein { to { opacity: 1; } }
+  
+    @keyframes fadein {
+      to {
+        opacity: 1;
+      }
+    }
+  
     .mine {
       align-self: flex-end;
       background: var(--my-bubble);
       color: white;
       border-radius: 20px 20px 4px 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
+  
     .theirs {
       align-self: flex-start;
       background: var(--their-bubble);
       color: #333;
       border-radius: 20px 20px 20px 4px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
-    .darkmode .theirs { background: #444; color: #f0f0f0; }
-    .timestamp { display: block; font-size: 11px; text-align: right; margin-top: 2px; opacity: 0.7; }
+  
+    .darkmode .theirs {
+      background: #444;
+      color: #f0f0f0;
+    }
+  
+    .timestamp {
+      display: block;
+      font-size: 11px;
+      text-align: right;
+      margin-top: 2px;
+      opacity: 0.7;
+    }
+  
     .input-area {
       display: flex;
       align-items: center;
@@ -90,80 +162,248 @@
       background: #fff;
       border-radius: 30px;
       padding: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       margin: 8px;
     }
-    .darkmode .input-area { background: #333; }
+  
+    .darkmode .input-area {
+      background: #333;
+    }
+  
     .input-area input {
       flex: 1;
       padding: 12px 16px;
       border-radius: 20px;
       border: 1px solid #ccc;
     }
-    .suggestion-btn, #confettiBtn, .send, #logoutButton, .mode-toggle {
+  
+    .suggestion-btn,
+    #confettiBtn,
+    .send,
+    #logoutButton,
+    .mode-toggle {
       transition: transform 0.3s ease;
     }
-    .suggestion-btn:hover, #confettiBtn:hover, .send:hover, #logoutButton:hover, .mode-toggle:hover {
+  
+    .suggestion-btn:hover,
+    #confettiBtn:hover,
+    .send:hover,
+    #logoutButton:hover,
+    .mode-toggle:hover {
       transform: rotate(-15deg) scale(1.2);
     }
-    .suggestion-btn { background: #e0e0e0; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; }
-    .darkmode .suggestion-btn { background: #444; color: #fff; }
-    .send { background: var(--my-bubble); color: white; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; }
-    #confettiBtn { background: #ff69b4; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; }
-    .suggestion-list {
-      position: absolute; bottom: 50px; left: 10px;
-      background: #fff; border: 1px solid #ccc; border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      padding: 5px; display: none; flex-direction: column; max-height: 150px; overflow-y: auto; z-index: 999;
+  
+    .suggestion-btn {
+      background: #e0e0e0;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      cursor: pointer;
     }
-    .darkmode .suggestion-list { background: #333; color: #fff; }
-    .suggestion-list button { background: none; border: none; text-align: left; padding: 5px 10px; }
-    .suggestion-list button:hover { background: #eee; }
-    .darkmode .suggestion-list button:hover { background: #555; }
-    .mode-toggle { position: absolute; top: 10px; right: 15px; cursor: pointer; }
-    #logoutButton { position: absolute; top: 10px; left: 15px; background: transparent; border: none; color: #ff5555; font-size: 22px; cursor: pointer; }
-    .emoji { position: fixed; pointer-events: none; z-index: 9999; animation: fall 3s linear forwards; }
-    @keyframes fall { 0% { opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
-
+  
+    .darkmode .suggestion-btn {
+      background: #444;
+      color: #fff;
+    }
+  
+    .send {
+      background: var(--my-bubble);
+      color: white;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+    }
+  
+    #confettiBtn {
+      background: #ff69b4;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      cursor: pointer;
+    }
+  
+    .suggestion-list {
+      position: absolute;
+      bottom: 50px;
+      left: 10px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      padding: 5px;
+      display: none;
+      flex-direction: column;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 999;
+    }
+  
+    .darkmode .suggestion-list {
+      background: #333;
+      color: #fff;
+    }
+  
+    .suggestion-list button {
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 5px 10px;
+    }
+  
+    .suggestion-list button:hover {
+      background: #eee;
+    }
+  
+    .darkmode .suggestion-list button:hover {
+      background: #555;
+    }
+  
+    .mode-toggle {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      cursor: pointer;
+    }
+  
+    #logoutButton {
+      position: absolute;
+      top: 10px;
+      left: 15px;
+      background: transparent;
+      border: none;
+      color: #ff5555;
+      font-size: 22px;
+      cursor: pointer;
+    }
+  
+    .emoji {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      animation: fall 3s linear forwards;
+    }
+  
+    @keyframes fall {
+      0% {
+        opacity: 1;
+      }
+  
+      100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+  
     #securityForm label {
-  display: block;
-  margin-top: 15px;
-  font-weight: 600;
-}
-#securityForm input[type="password"] {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  margin-top: 5px;
-}
-#securityForm .radio-group {
-  display: flex;
-  gap: 15px;
-  margin-top: 10px;
-}
-#securityForm .radio-group label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-weight: 500;
-}
-#securityForm .submit-btn {
-  margin-top: 20px;
-  width: 100%;
-  padding: 12px;
-  background: var(--my-bubble);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: transform 0.3s ease;
-}
-#securityForm .submit-btn:hover {
-  transform: scale(1.05);
-}
-
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+  
+    #securityForm input[type="password"] {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+  
+    #securityForm .radio-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+  
+    #securityForm .radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+    }
+  
+    #securityForm .submit-btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background: var(--my-bubble);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.3s ease;
+    }
+  
+    #securityForm .submit-btn:hover {
+      transform: scale(1.05);
+    }
+  
+    /* MOBILE RESPONSIVE PATCH */
+    @media (max-width: 480px) {
+  
+      .login,
+      .chatroom {
+        padding: 15px;
+        border-radius: 10px;
+      }
+  
+      .messages {
+        padding: 10px;
+        font-size: 13px;
+      }
+  
+      .message {
+        max-width: 90%;
+        font-size: 13px;
+        padding: 8px 12px;
+      }
+  
+      .input-area {
+        flex-wrap: wrap;
+        padding: 6px;
+        gap: 5px;
+      }
+  
+      .input-area input {
+        flex: 1 1 100%;
+        padding: 10px 14px;
+        margin-top: 5px;
+      }
+  
+      .suggestion-btn,
+      #confettiBtn,
+      .send {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+      }
+  
+      #confettiBtn {
+        margin-top: 5px;
+      }
+  
+      .suggestion-list {
+        bottom: 60px;
+        left: 5px;
+        right: 5px;
+        width: auto;
+      }
+  
+      .mode-toggle,
+      #logoutButton {
+        font-size: 18px;
+      }
+  
+      .radio-group {
+        flex-direction: column;
+        gap: 8px;
+      }
+  
+      #securityForm label {
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
