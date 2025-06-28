@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secret Telegram Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --my-bubble: #5563de;
+      --their-bubble: #e0e0e0;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #74abe2, #5563de);
+      transition: background 0.5s ease, color 0.5s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: #333;
+    }
+    .darkmode { background: linear-gradient(135deg, #2c3e50, #1c1c1c); color: #f0f0f0; }
+    .login, .chatroom {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 400px;
+      padding: 25px;
+      transition: background 0.3s ease, color 0.3s ease;
+      position: relative;
+    }
+    .darkmode .login, .darkmode .chatroom { background: #1e1e1e; color: #f0f0f0; }
+    .chatroom { display: none; flex-direction: column; height: 80vh; }
+    h3 { margin-top: 0; color: #5563de; text-align: center; font-weight: 600; }
+    .darkmode h3 { color: #f0f0f0; }
+    #clock { text-align: center; font-size: 13px; margin-top: -8px; margin-bottom: 10px; }
+    .pulse { animation: pulseRed 1s infinite alternate; }
+    @keyframes pulseRed { 0% { color: red; } 100% { color: darkred; transform: scale(1.2); } }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      background: #f4f7fb;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      scroll-behavior: smooth;
+    }
+    .darkmode .messages { background: #2a2a2a; }
+    .message {
+      max-width: 75%;
+      margin: 6px 0;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      word-wrap: break-word;
+      opacity: 0;
+      animation: fadein 0.5s forwards;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    @keyframes fadein { to { opacity: 1; } }
+    .mine {
+      align-self: flex-end;
+      background: var(--my-bubble);
+      color: white;
+      border-radius: 20px 20px 4px 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .theirs {
+      align-self: flex-start;
+      background: var(--their-bubble);
+      color: #333;
+      border-radius: 20px 20px 20px 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .darkmode .theirs { background: #444; color: #f0f0f0; }
+    .timestamp { display: block; font-size: 11px; text-align: right; margin-top: 2px; opacity: 0.7; }
+    .input-area {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: auto;
+      position: relative;
+      background: #fff;
+      border-radius: 30px;
+      padding: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      margin: 8px;
+    }
+    .darkmode .input-area { background: #333; }
+    .input-area input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+    }
+    .suggestion-btn, #confettiBtn, .send, #logoutButton, .mode-toggle {
+      transition: transform 0.3s ease;
+    }
+    .suggestion-btn:hover, #confettiBtn:hover, .send:hover, #logoutButton:hover, .mode-toggle:hover {
+      transform: rotate(-15deg) scale(1.2);
+    }
+    .suggestion-btn { background: #e0e0e0; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; }
+    .darkmode .suggestion-btn { background: #444; color: #fff; }
+    .send { background: var(--my-bubble); color: white; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; }
+    #confettiBtn { background: #ff69b4; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; }
+    .suggestion-list {
+      position: absolute; bottom: 50px; left: 10px;
+      background: #fff; border: 1px solid #ccc; border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      padding: 5px; display: none; flex-direction: column; max-height: 150px; overflow-y: auto; z-index: 999;
+    }
+    .darkmode .suggestion-list { background: #333; color: #fff; }
+    .suggestion-list button { background: none; border: none; text-align: left; padding: 5px 10px; }
+    .suggestion-list button:hover { background: #eee; }
+    .darkmode .suggestion-list button:hover { background: #555; }
+    .mode-toggle { position: absolute; top: 10px; right: 15px; cursor: pointer; }
+    #logoutButton { position: absolute; top: 10px; left: 15px; background: transparent; border: none; color: #ff5555; font-size: 22px; cursor: pointer; }
+    .emoji { position: fixed; pointer-events: none; z-index: 9999; animation: fall 3s linear forwards; }
+    @keyframes fall { 0% { opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+    #securityForm label {
+  display: block;
+  margin-top: 15px;
+  font-weight: 600;
+}
+#securityForm input[type="password"] {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+}
+#securityForm .radio-group {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+#securityForm .radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+}
+#securityForm .submit-btn {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  background: var(--my-bubble);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.3s ease;
+}
+#securityForm .submit-btn:hover {
+  transform: scale(1.05);
+}
+
+  </style>
+</head>
+<body>
+  <div class="login" id="login">
+    <h3>Secret Chat Login</h3>
+    <form id="securityForm">
+      <label for="q1">1. What is our secret number code?</label>
+      <input type="password" id="q1" required autocomplete="off" />
+
+      <label for="q2">2. Pet name?</label>
+      <input type="password" id="q2" required autocomplete="off" />
+
+      <label for="q3">3. Year we falling in love?</label>
+      <input type="password" id="q3" required autocomplete="off" />
+
+      <label>Who are you?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="who" value="boy" required> D28</label>
+        <label><input type="radio" name="who" value="girl"> D05</label>
+      </div>
+
+      <button type="submit" class="submit-btn">Enter</button>
+    </form>
+  </div>
+
+  <div class="chatroom" id="chatroom">
+    <button id="logoutButton">🚪</button>
+    <div class="mode-toggle" id="modeToggle">🌙</div>
+    <h3>Secret Telegram Chat</h3>
+    <div id="clock">Loading time...</div>
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <button id="suggestionBtn" class="suggestion-btn">💬</button>
+      <button id="confettiBtn">❤️</button>
+      <div id="suggestionList" class="suggestion-list">
+        <button>I love you</button>
+        <button>I miss you</button>
+        <button>See you soon</button>
+        <button>Good night dear</button>
+        <button>Thinking of you</button>
+        <button>My sunshine</button>
+        <button>Hug me soon</button>
+        <button>Sweet dreams</button>
+        <button>Stay with me</button>
+        <button>You’re my home</button>
+        <button>Be mine</button>
+        <button>My heart is yours</button>
+        <button>Missing your smile</button>
+        <button>Forever yours</button>
+        <button>Warm hugs</button>
+        <button>Can’t wait to see you</button>
+        <button>My everything</button>
+        <button>Always with you</button>
+        <button>Kiss me</button>
+        <button>Love you more</button>
+      </div>
+      <input type="text" id="messageInput" placeholder="Type a message..." />
+      <button id="sendButton" class="send">&#9658;</button>
+    </div>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC-O4-YDestM5Y8eiNJwtuFbUeU5yJCeVg",
+  authDomain: "secretchat-b11a1.firebaseapp.com",
+  projectId: "secretchat-b11a1",
+  storageBucket: "secretchat-b11a1.appspot.com",
+  messagingSenderId: "375162629432",
+  appId: "1:375162629432:web:3474cb758b2b4386c365cd"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const messagesCollection = collection(db, "messages");
+
+const form = document.getElementById("securityForm");
+const chatroom = document.getElementById("chatroom");
+const login = document.getElementById("login");
+const input = document.getElementById("messageInput");
+const sendButton = document.getElementById("sendButton");
+const messages = document.getElementById("messages");
+const logoutButton = document.getElementById("logoutButton");
+const modeToggle = document.getElementById("modeToggle");
+const clock = document.getElementById("clock");
+const suggestionBtn = document.getElementById("suggestionBtn");
+const suggestionList = document.getElementById("suggestionList");
+const confettiBtn = document.getElementById("confettiBtn");
+const body = document.body;
+
+const validAnswers = { q1: "0010", q2: "bee", q3: "2019" };
+
+if (localStorage.getItem("theme") === "dark") {
+  body.classList.add("darkmode");
+  modeToggle.textContent = "☀️";
+}
+modeToggle.addEventListener("click", () => {
+  body.classList.toggle("darkmode");
+  modeToggle.textContent = body.classList.contains("darkmode") ? "☀️" : "🌙";
+  localStorage.setItem("theme", body.classList.contains("darkmode") ? "dark" : "light");
+});
+
+suggestionBtn.addEventListener("click", () => {
+  suggestionList.style.display = suggestionList.style.display === "flex" ? "none" : "flex";
+});
+suggestionList.addEventListener("click", e => {
+  if (e.target.tagName === "BUTTON") {
+    sendMessage(e.target.textContent);
+    suggestionList.style.display = "none";
+  }
+});
+confettiBtn.addEventListener("click", fireLove);
+
+function updateClock() {
+  const date = new Date();
+  clock.textContent = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+}
+setInterval(updateClock, 1000);
+
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  const a1 = document.getElementById("q1").value.trim();
+  const a2 = document.getElementById("q2").value.trim().toLowerCase();
+  const a3 = document.getElementById("q3").value.trim();
+  if (a1 === validAnswers.q1 && a2 === validAnswers.q2 && a3 === validAnswers.q3) {
+    const who = document.querySelector('input[name="who"]:checked').value;
+    localStorage.setItem("who", who);
+    if(who === "boy"){
+      document.documentElement.style.setProperty('--my-bubble', '#3b82f6'); // mode D28
+    }else if(who === "girl"){
+      document.documentElement.style.setProperty('--my-bubble', '#e91e63'); // mode D05
+    }
+    login.style.display = "none";
+    chatroom.style.display = "flex";
+  } else { alert("Wrong!"); }
+});
+
+sendButton.addEventListener("click", () => sendMessage(input.value));
+input.addEventListener("keydown", e => { if(e.key==="Enter"){e.preventDefault();sendMessage(input.value);} });
+
+async function sendMessage(text){
+  if(text.trim()){
+    await addDoc(messagesCollection, { text, sender: localStorage.getItem("who"), createdAt: serverTimestamp() });
+    input.value="";
+  }
+}
+const q = query(messagesCollection, orderBy("createdAt"));
+onSnapshot(q, snapshot => {
+  messages.innerHTML = "";
+  const me = localStorage.getItem("who");
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    const t = d.createdAt?.toDate().toLocaleTimeString() ?? "";
+    const div = document.createElement("div");
+    div.className = "message";
+    if(d.sender === me){
+      div.classList.add("mine");
+    }else{
+      div.classList.add("theirs");
+    }
+    div.innerHTML = `${d.text}<div class="timestamp">${t}</div>`;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  });
+});
+
+logoutButton.addEventListener("click", () => {
+  chatroom.style.display = "none";
+  login.style.display = "block";
+  localStorage.removeItem("who");
+  form.reset();
+});
+function fireLove(){
+  for(let i=0; i<50; i++){
+    const emoji=document.createElement("div");
+    emoji.className="emoji";
+    emoji.innerText=["❤️","💖","💕","💘"][Math.floor(Math.random()*4)];
+    emoji.style.left=Math.random()*100+"vw";
+    emoji.style.top="-30px";
+    emoji.style.fontSize=Math.random()*20+20+"px";
+    document.body.appendChild(emoji);
+    setTimeout(()=>emoji.remove(),3000);
+  }
+}
+
+let hasFired = false;
+setInterval(() => {
+  const now = new Date();
+  if (now.getHours() === 0 && now.getMinutes() === 10) {
+    if (!hasFired) {
+      hasFired = true;
+      clock.classList.add("pulse");
+      let interval = setInterval(fireLove, 500);
+      setTimeout(() => {
+        clearInterval(interval);
+        clock.classList.remove("pulse");
+      }, 10000);
+    }
+  } else {
+    hasFired = false;
+  }
+}, 1000);
+
+  document.addEventListener("contextmenu", function(e) {
+    e.preventDefault();
+  });
+
+  // Blok F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, dan Ctrl+S
+  document.addEventListener("keydown", function(e) {
+    if (
+      e.key === "F12" ||
+      (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) ||
+      (e.ctrlKey && e.key === "U") ||
+      (e.ctrlKey && e.key === "S")
+    ) {
+      e.preventDefault();
+    }
+  });
+</script>
+</body>
+</html>
