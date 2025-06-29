@@ -13,13 +13,15 @@
     :root {
       --my-bubble: #5563de;
       --their-bubble: #e0e0e0;
+      --my-bubble-dark: #7aa0ff;
+      --their-bubble-dark: #444;
     }
   
     body {
       margin: 0;
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #74abe2, #5563de);
-      transition: background 0.5s ease, color 0.5s ease;
+      background: linear-gradient(135deg, #ffd6e0, #a1c4fd);
+      transition: background 0.8s ease, color 0.8s ease;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -35,19 +37,22 @@
   
     .login,
     .chatroom {
-      background: white;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px);
       border-radius: 15px;
+      border: 1px solid rgba(255,255,255,0.3);
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
       width: 100%;
       max-width: 400px;
       padding: 25px;
-      transition: background 0.3s ease, color 0.3s ease;
+      transition: background 0.5s ease, color 0.5s ease, backdrop-filter 0.5s ease;
       position: relative;
     }
   
     .darkmode .login,
     .darkmode .chatroom {
-      background: #1e1e1e;
+      background: rgba(30, 30, 30, 0.2);
+      border: 1px solid rgba(255,255,255,0.1);
       color: #f0f0f0;
     }
   
@@ -100,7 +105,14 @@
       display: flex;
       flex-direction: column;
       scroll-behavior: smooth;
+      height: 100%;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
+
+    .message:hover {
+  transform: scale(1.02);
+}
+
   
     .darkmode .messages {
       background: #2a2a2a;
@@ -503,7 +515,7 @@ if (localStorage.getItem("theme") === "dark") {
 }
 modeToggle.addEventListener("click", () => {
   body.classList.toggle("darkmode");
-  modeToggle.textContent = body.classList.contains("darkmode") ? "☀️" : "🌙";
+  modeToggle.textContent = body.classList.contains("darkmode") ? "🌞" : "🌙";
   localStorage.setItem("theme", body.classList.contains("darkmode") ? "dark" : "light");
 });
 
@@ -552,24 +564,30 @@ async function sendMessage(text){
   }
 }
 const q = query(messagesCollection, orderBy("createdAt"));
-onSnapshot(q, snapshot => {
-  messages.innerHTML = "";
-  const me = localStorage.getItem("who");
-  snapshot.forEach(doc => {
-    const d = doc.data();
-    const t = d.createdAt?.toDate().toLocaleTimeString() ?? "";
-    const div = document.createElement("div");
-    div.className = "message";
-    if(d.sender === me){
-      div.classList.add("mine");
-    }else{
-      div.classList.add("theirs");
-    }
-    div.innerHTML = `${d.text}<div class="timestamp">${t}</div>`;
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
+  onSnapshot(q, snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if (["added", "modified"].includes(change.type)) {
+        const d = change.doc.data();
+        const t = d.createdAt?.toDate().toLocaleTimeString() ?? "";
+        const existing = document.getElementById(change.doc.id);
+        const div = existing || document.createElement("div");
+        div.className = "message";
+        div.id = change.doc.id;
+        if (d.sender === localStorage.getItem("who")) {
+          div.classList.add("mine");
+        } else {
+          div.classList.add("theirs");
+        }
+        div.innerHTML = `${d.text}<div class="timestamp">${t}</div>`;
+        if (!existing) {
+          messages.appendChild(div);
+        }
+        messages.scrollTop = messages.scrollHeight;
+      }
+    });
   });
-});
+
+
 
 logoutButton.addEventListener("click", () => {
   chatroom.style.display = "none";
@@ -581,7 +599,7 @@ function fireLove(){
   for(let i=0; i<50; i++){
     const emoji=document.createElement("div");
     emoji.className="emoji";
-    emoji.innerText=["❤️","💖","💕","💘"][Math.floor(Math.random()*4)];
+    emoji.innerText = ["❤️", "💖", "💕", "💘", "💙", "💜"][Math.floor(Math.random() * 6)];
     emoji.style.left=Math.random()*100+"vw";
     emoji.style.top="-30px";
     emoji.style.fontSize=Math.random()*20+20+"px";
